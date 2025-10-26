@@ -1,0 +1,14 @@
+# macOS system files
+.DS_Store
+
+# Python temporary files
+__pycache__/
+*.pyc
+
+# R, Jupyter, VSCode, etc.
+.Rhistory
+.ipynb_checkpoints/
+.vscode/
+
+# Logs
+*.log
