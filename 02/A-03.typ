@@ -57,6 +57,74 @@
 
 #solution[
 
+  == MIKROINSTRUKTIONEN
+  A: D3 = 0
+  B: RAM[A] = D2
+  C: A = A + 1
+  D: D2 = D1
+  E: A = D3
+  F: D2 = D2 + 1
+
+  == 3.4
+  ZIEL: D3 = D1 + D2
+
+  ALU1 = D1
+  ALU2 = D2
+
+  ALU-ADD
+
+  D3-W
+
+  == 3.5
+
+  ZIEL: 
+  - D2 = RAM[A]
+  - RAM[A-1] = D2
+
+  === H
+  ZIEL: D2 = RAM[A]
+  
+  ALU1-RAM
+  ALU2-0
+  ALU-ADD
+
+  D2-W
+
+  == I
+  ZIEL: A = A - 1
+
+  ALU1-A
+  ALU2-1
+  ALU-SUB
+
+  A-W
+
+  == dann...
+  state: A = A-1
+  D2 = RAM[A]
+
+  ZIEL: RAM[A] = D2
+
+  -> Mikroinstruktion *B*
+
+  == 5a
+
+  Sonderfall: 0 - 1
+  Adresse "-1" wie interpretieren?
+  Idee: Overflow, sodass -1 = höchste Adresse
+  NOTE: wie genau funktioniert das?
+
+  == 5b
+  Hauptgrund: default ist read mode
+  NOTE: gibt es noch mehr ?
+
+  == 5c
+  IDEE: Unsere instruktion ist kürzer. 
+  NOTE: Unterschied Instruktionen von Mikroinstruktionen???
+  Implikationen??
+    - Ansatz: naja, Takt pro MI oder pro I. Andere Probleme. 
+
+
 #table(
   columns: 6,
   stroke: 0.5pt + rgb("666675"),
