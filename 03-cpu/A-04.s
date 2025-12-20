@@ -13,33 +13,21 @@ initialBrightness: .word 40
 # s3: ticks before input
 # s4: color
 
-# --- FUNCTIONS ---
-#start:
-#tick:
-#+-checkInput:
-#increaseBrightness:
-#increaseBrightnessTestBounds:
-#decreaseBrightness:
-#decreaseBrightnessTestBounds:
-#+drawPixel
-#+removePixel
-#+paintCanvas
-
 .text
 start:
-        lw s0, pulseLength
-        lw t0, initialBrightness
-        sub s0, s0, t0
+        lw s0, initialBrightness
         lw s1, pulseLength
+        add s2, s0, x0                                          # set ON counter to initial brightness
         lw s3, inputSpeed
         
 tick:
         addi s1, s1, -1
-        beqz s1, drawPixel # start new period
-        beq s1, s0, removePixel
+        beqz s1, drawPixel                                      # start new period
 
-        # process input
-        addi s3, s3, -1
+        addi s2, s2, -1                                         # when ON ends -> set to OFF
+        beqz s2, removePixel
+
+        addi s3, s3, -1                                         # handle input periodically
         beqz s3, checkInput
 
         j tick
@@ -57,12 +45,6 @@ checkInput:
 
                 j tick                                          # else
 
-# v 0.0
-    # li t0, LED_MATRIX_0_SIZE
-    # li t2, 0xFF
-    # sw t2, 0(t0)
-    # j tick
-
 increaseBrightnessTestBounds:
 # if current_brightness < pulselength-1: j increaseBrightness
        lw t0, pulseLength
@@ -77,7 +59,7 @@ increaseBrightness:
 
 
 decreaseBrightnessTestBounds:
-# if current_brightness < pulselength-1: j decreaseBrightness
+# if current_brightness > 0: j decreaseBrightness
        bgtz s0, decreaseBrightness
 # else 
        j tick
@@ -86,11 +68,15 @@ decreaseBrightness:
         addi s0, s0, -1
         j tick
 
+# start period
 drawPixel:
-    lw s4, white
-    lw s1, pulseLength
-    # add s2, x0, x0 TODO: 
-    j paintCanvas
+                lw s1, pulseLength                              # reset tick counter
+                add s2, s0, x0                                  # reset ON counter
+
+                beqz s2, removePixel                            # if brightness==0 set to OFF
+
+                lw s4, white                                    # set color for painting
+                j paintCanvas
     
 removePixel:
     lw s4, black
