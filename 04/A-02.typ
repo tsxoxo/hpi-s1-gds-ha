@@ -95,3 +95,5 @@ Siehe `mod.s` und `div.s`
 
 === b) Call-By-Reference
 Siehe `mod_ref.s` und `div_ref.s`
+
+// TODO: Bonus: accept negative nums
