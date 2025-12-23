@@ -97,3 +97,8 @@ Siehe `mod.s` und `div.s`
 Siehe `mod_ref.s` und `div_ref.s`
 
 // TODO: Bonus: accept negative nums
+
+== 2.3 Quicksort
+Siehe `quicksort.s`
+
+== 2.4 Quicksort Stack Frame
