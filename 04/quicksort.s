@@ -21,48 +21,56 @@ hi:
 .text
 j main
 
+swap:
+#####################################################
 # Swap words [a] with [b]
-# IN:
+#
+# IN
 # a0 = a
 # a1 = b
-swap:
-# t0 = [a]
-lw t0 0 a0
-# t1 = [b]
-lw t1 0 a1
-# [b] = [a]
-sw t0 0 a1
-# [a] = [b]
-sw t1 0 a0
+#####################################################
+# load values to be exchanged
+                lw t0 0 a0
+                lw t1 0 a1
+# write
+                sw t0 0 a1
+                sw t1 0 a0
+                ret
 
-ret
-
+partition:
+#####################################################
 # Partition array around pivot using Hoare's method
-# IN:
+# pivot = first element
+#
+# IN
 # a0 = start address
 # a1 = end address
-# OUT:
+#
+# OUT
 # a0 = pivot address
-partition:
-# s0 = i addr
-# s1 = j addr
+#
+# REGISTER MAP
+# s0 = i (addr)
+# s1 = j (addr)
 # s2 = [i]
 # s3 = [j]
 # s4 = pivot value
-# s5 = lo addr
-# s6 = hi addr
+# s5 = start address of array
+# s6 = end address of array
+#####################################################
+# save return address
+                addi sp sp -16
+                sw ra 12 sp
 
-# pivot = first element
-lw s4 0 a0
-# initialize i, j
-addi s0 a0 -4
-addi s1 a1 4
-# initialize lo, hi
-mv s5 a0
-mv s6 a1
+# initialize registers
+                addi s0 a0 -4
+                addi s1 a1 4
+                lw s4 0 a0 
+                mv s5 a0
+                mv s6 a1
 
 loop:
-
+                # scan forward until element >= pivot
                 inc_i:
                 beq s0 s6 skip_i
                 addi s0 s0 4
@@ -70,6 +78,7 @@ loop:
                 blt s2 s4 inc_i
                 skip_i:
 
+                # scan backward until element <= pivot
                 dec_j:
                 beq s1 s5 skip_j
                 addi s1 s1 -4
@@ -77,38 +86,39 @@ loop:
                 bgt s3 s4 dec_j
                 skip_j:
 
+                # if i >= j return j
                 bgeu s0 s1 done_partition
 
                 # swap(i, j)
                 mv a0 s0
                 mv a1 s1
-# save ra on stack
-                addi sp sp -16
-                sw ra 12 sp
                 call swap
-
-#restore ra
-                lw ra 12 sp
-                addi sp sp 16
 
                 j loop
 
-done_partition:
+                done_partition:
+                # restore return address and deallocate stack space
+                lw ra 12 sp
+                addi sp sp 16
 
-mv a0 s1
-ret
+                # return j
+                mv a0 s1
+                ret
 
+quicksort: 
+#####################################################
 # Perform quicksort on array of word-sized integers
 # MUTATES
 # 
-# IN:
+# IN
 # a0 = start address
 # a1 = end address
-quicksort: 
+#####################################################
+                # if start address >= end address: return
                 bgeu a0 a1 done_quicksort
 
-# Save ra, start address, end address on stack 
-# First, allocate space on stack aligned to 128 bits as per RISC-V ABI
+                # Establish stack frame for recursive quicksort call
+                # First, allocate space on stack aligned to 128 bits as per RISC-V ABI
                 addi sp sp -16
                 sw ra 12 sp
                 sw a0 8 sp
@@ -116,23 +126,23 @@ quicksort:
 
                 call partition
 
-# State after returning from partition():
-# a0 = address of pivot (return value of partition())
+                # State after returning from partition():
+                # a0 = address of pivot (return value of partition())
                 sw a0 0 sp
 
-# Quicksort high array (values greater than pivot)
-# -> quicksort(pivot+1, end)
+                # Sort high array (values greater than pivot)
+                # -> quicksort(pivot+1, end)
                 addi a0 a0 4
                 lw a1 4 sp
                 call quicksort 
 
-# Quicksort low array (values smaller than pivot)
-# -> quicksort(start, pivot)
+                # Sort low array (values smaller than pivot)
+                # -> quicksort(start, pivot)
                 lw a0 8 sp
                 lw a1 0 sp
                 call quicksort 
 
-# deallocate space
+                # Clean up
                 lw ra 12 sp
                 addi sp sp 16
 
@@ -140,6 +150,8 @@ quicksort:
                 ret
 
 main:
+                # lo = start address of array
+                # hi = end address of array
                 la a0 lo
                 la a1 hi
                 call quicksort
