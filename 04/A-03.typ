@@ -1,43 +1,37 @@
-// NOTE: Seems like the slides alone don't provide enough info to answer these (e.g. 3.4)
-// Looking at Patterson, Hennessy -- Computer Organization RISC-V (`PH20`)
-
 = 3. Interrupts
 
 == 1. Welche Arten von Interrupts gibt es? Wodurch werden diese ausgelöst?
 
-// This seems irrelevant
-// - Trap, synchrone Ausnahme -- wird durch Auslösung einer konkreten Programminstruktion ausgelöst (s. 11.12)
-//   - Arithmetische Fehler
-//   - Transiente Ausfälle -- vergehen von selbst // relevant here?
-//   - Verletzung von Schutzrechten
+Interrupts sind externe, asynchrone Ausnahmen, die nicht direkt mit dem aktuellen Programmablauf (im Sinne der momentanen Instruktion) zu tun haben (s. 11.17).
 
-// Definition
-// Interrupt, Unterbrechung, externe Ausnahme -- hat nichts mit dem Programmablauf zu tun (s. 11.17)
+Grob gesehen, können wir unterscheiden zwischen IO und Timer Interrupts.
 
-// TODO: Arten von Interrupts?
-// Synchrone und Asynchrone?
-
-// NOTE: Komisch, laut PH20 bezeichnet RISC-V lediglich "I/O device requests" als interrupts -- bezieht sich die Frage 3.1 doch eher auf Ausnahmen?
-
-Ausgelöst durch:
+Beispiele für IO:
 - Eingaben wie Maus und Tastatur
 - IO Prozesse wie Rückmeldung eines Speicherträgers über erfolgreichen Schreibprozess
-- Timer
 
 == 2. Wie bzw. wann wird auf das Eintreten eines Interrupts reagiert? Wie unterscheiden sich die Arten hier? Auf welcher Betrachtungsebene (Mikroinstruktionen, Instruktionen, Programme, . . . ) erfolgt dies?
 
-Control detektiert Ausnahme und leitet Behandlung ein (11.22). Startet ein spezielles Unterprogramm -- eine Ausnahmeroutine (Interrupt Service Routine, _ISR_)-- über Mikroinstruktion (11.24). Für jeden Ausnahmetypen gibt es eine separate Routine, zu der per Unterbrechungstabelle gesprungen wird.
+Control detektiert Ausnahme und leitet Behandlung ein (11.22). Es wird je nach Ausnahme die Ausführung einer Ausnahmeroutine (Interrupt Service Routine, _ISR_) eingeleitet. 
 
-Der ISR Aufruf erfolgt entweder über einen direkten Sprung --  basierend auf dem Ausnahmetypen und der entsprechenden Adresse in der Interrupt-Tabelle (vectored interrupt); oder es wird ein spezielles Register gesetzt und anhand dessen, verzweigt (RISC-V: supervisor exception cause register).
+Die Arten von Interrupt (IO, Timer) können sich durch Signalart unterscheiden (z.B. sporadische IO Rückmeldung vs. periodischer Timer). Das Schema der Behandlung bleibt aber gleich.
+
+Die Behandlung eines Interrupts erfolgt transparent und ist für das Programm nicht sichtbar -- es vergeht lediglich Zeit zwischen zwei Instruktionen. Die ISR wird von Control durch Mikroinstruktionen angestoßen.
 
 == 3. Was ergibt sich daraus für die Verantwortlichkeiten im Falle eines Interrupts? Gehen Sie zudem auf die Sinnhaftigkeit von Rückgabewerten ein.
 
-Behandlung einer Ausnahme sollte transparent erfolgen -- State bleibt gleich (IPC, Reg, Stack). Zeit zwischen Instruktionen vergeht.
-Aufgaben des Aufrufers: PC in Register setzen, Stack aufräumen, usw. -- werden von Control übernommen. 
+Bei einem Aufruf einer _ISR_ gibt es keinen "Aufrufenden" im klassischen Sinne, da der Aufruf nicht aus einem Programmablauf sondern von der Hardware selbst verursacht wird. Dementsprechend werden die Aufgaben des Aufrufers auf Control sowie die ISR selbst verteilt. Control stellt sicher, dass nach der Behandlung des Interrupts das Programm an der selben Stelle fortsetzen kann. Die _ISR_ gewährleistet, dass der übrige State erhalten bleibt (Stack, Register).
 
-Interrupt-Routinen haben nie einen Rückgabewert. Das hat damit zu tun, dass der Aufruf einer ISR in einem besonderen Kontext geschieht (z.b. während ein Programm läuft), in dem es unklar ist, wie man mit einem Rückgabewert vorgehen würde: wo würde man ihn abspeichern? Wer würde ihn verarbeiten? usw. (s. 11.29)
+Dementsprechend haben Interrupt-Routinen keinen Rückgabewert. Es gab keinen Aufrufenden im klassischen Sinne, also auch niemanden der einen Rückgabewert erwarten würde. Das Ziel ist es, das Programm nach dem Interrupt weiter laufen zu lassen, 'als wäre nichts gewesen'.
 
 == 4. Es gibt zudem die Möglichkeit, Interrupts zu sperren oder zu priorisieren, sodass die Behandlung nicht umgehend erfolgen muss. Welchen Nutzen könnte dies haben?
+
+// START_HERE:
+Priorisierung und Sperrung von Interrupts könnte vielfältige Anwendung haben:
+
+- Interrupts Sperren während der Behandlung eines bestehenden Interrupts um Komplexität zu vermeiden.
+- Nach Interrupt-Quellen unterscheiden und so reagieren, dass ein möglichst effizienter Programmablauf erreicht wird.
+- Bei knappen Ressourcen dafür sorgen, dass laufende Programme weiter laufen.
 
 == 5. Gehen Sie von Interruptbehandlung anhand einer Sprungtabelle aus, von welcher in die richtige Interrupt Service Routine gesprungen wird.
 
