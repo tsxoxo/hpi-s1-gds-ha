@@ -3,8 +3,8 @@
 === 1. Mögliche Konventionen
 *Registersicherung*:
 
-+ aufgerufenes Unterprogramm sichert Register auf Stack vor Benutzung (10.72), stellt vor Rücksprung Register wieder her.
-+ Register werden unterschieden: dürfen / dürfen nicht vom Unterprogramm verändert werden (saved vs temporary)
++ Register sind unterteilt in: caller-saved vs. callee-saved (wer sichert und restauriert)
++ Gewisse Register dürfen / dürfen nicht vom Unterprogramm verändert werden (saved vs temporary)
 
 *Alignment*: 
 
@@ -15,26 +15,24 @@
 
 *Stack*: 
 
-+ Stapel von oben nach unten (Stapelzeiger zeigt auf die niedrigste belegt Adresse)
-+ Stapel von unten nach oben (...größte...)
-+ Parameter liegen auf Stack vor Rücksprungadresse/nach Rücksprungadresse
++ Stapel wächst von oben nach unten (Stapelzeiger zeigt auf die niedrigste belegt Adresse) oder umgekehrt
++ Parameter liegen auf Stack vor oder nach Rücksprungadresse
++ Stapelzeiger zeigt auf letztes Element oder erste freie Speicheradresse
 
 *Parameterübergabe*: 
 
 + call-by-value (ein Wert wird übergeben)
-+ call-by-reference (eine Referenz wird übergeben)
-+ call-by-name // (TODO: ???)
++ call-by-reference (eine Referenz wird übergeben. In der Praxis: eine Adresse)
++ call-by-name (ein Ausdruck wird bei Aufruf des Unterprogramms neu ausgewertet)
 
 === 2. RISC-V Konventionen
 
 *Registersicherung*: 
 
 Register werden grob unterschieden: 
-+ saved registers `s0 - s11`: Aufrufer darf vertrauen, dass Unterprogramm diese nicht verändert hat
-+ temporary registers `t0 - t6`: Unterprogramm darf beliebig überschreiben
-// TODO: so wie oben steht es in Folien, aber anders in riscv-calling.pdf
++ saved registers `s0 - s11`: Aufrufer darf vertrauen, dass Unterprogramm diese nicht verändert hat.
++ temporary registers `t0 - t6`: Unterprogramm darf beliebig überschreiben.
 + Details hängen von genauer Architektur ab (32-Bit, 64-bit, I oder G Extension). Siehe `Table 18.2` in `RISC-V Calling Convention`.
-// Dont think this is relevant: Stackpointer in `x2` (alias `sp`); bei `jal`: Register `x1` (alias `ra`) für Rücksprungadresse nutzen;
 
 *Alignment*: 
 
@@ -44,22 +42,20 @@ Register werden grob unterschieden:
 *Stack*: 
 
 + Stapel von oben nach unten (Stapelzeiger zeigt auf die niedrigste belegt Adresse)
-+ stack pointer is always kept 16-bute aligned (TODO: ???)
-+ Parameter haben den Stack vor Rücksprungadresse/nach Rücksprungadresse;
-// TODO: riscv-calling.pdf: what is 'RVG'?
-// not sure: Rücksprungadresse auf Stack ist Verantwortung des Unterprogramms
++ Stack pointer ist auf 16 Bytes aligned
++ Rücksprungadresse auf Stack zu legen ist Verantwortung des non-leaf Unterprogramms
++ Bei Spill in Paramterübergabe zeigt der stack pointer auf das erste auf dem Stack liegende Argument
 
 *Parameterübergabe*:
 
-Hauptquelle ist `RISC-V Calling Convention`:
+Hauptquelle ist `RISC-V Calling Convention`.
+ibid.: _pointer-word_: register-width, also 32 Bits bei RV32.
 
-+ Parameterübergabe wenn möglich in Registern, also by-value.
++ Parameterübergabe wenn möglich in Registern und by-value.
++ Bei zu vielen Argumenten: Übergabe über Stack.
 + Integer-Register `a0-a7` und floating-point Register `fa0-fa7`
 + Genaue Übergabe hängt wieder von spezifischer Architektur ab
-+ Argumente kleiner als ein 'pointerword' werden in den least significant bits des entsprechenden Registers bzw. in kleineren Adressen auf dem Stack übergeben (wegen little-endian)
-+ Auch Regel für Argumente mit doppelter Größe von pointer-word
-+ Noch größere Argumente werden als Referenz übergeben, also by-reference
++ Argumente kleiner als ein pointer-word werden in den least significant bits des entsprechenden Registers bzw. in kleineren Adressen auf dem Stack übergeben (wegen little-endian)
++ Argumente größer als doppelte Größe von pointer-word werden by-reference übergeben
 + Ähnliche Regeln für Rückgabe
-// TODO: pointer-word?
 
-z.B. call-by-value (ein Wert wird übergeben), call-by-reference (eine Referenz wird übergeben), call-by-name (TODO: ???).
