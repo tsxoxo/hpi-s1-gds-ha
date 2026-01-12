@@ -18,7 +18,7 @@ arg1: .word 0x0007
 .text
 j main
 
-# Expect args of integer type in a0-a7 (as per ABI)
+# Expect args of integer type in a0-a1 (as per ABI)
 add:
 # Return value in a0 (as per ABI)
 add a0, a0, a1

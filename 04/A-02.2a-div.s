@@ -12,15 +12,15 @@ j main
 #
 # OUT
 # a0 = a // b
-mod:
+my_div:
 # t0 = counter
 add t0 x0 x0
 
-dec:
+dec_loop:
 blt a0, a1, done
 sub a0 a0 a1
 addi t0 t0 1
-j dec
+j dec_loop
 
 done:
 mv a0 t0
@@ -29,4 +29,4 @@ ret
 main:
 lw a0, arg0
 lw a1, arg1
-call mod
+call my_div
