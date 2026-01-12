@@ -34,6 +34,31 @@ Register werden grob unterschieden:
 + temporary registers `t0 - t6`: Unterprogramm darf beliebig überschreiben.
 + Details hängen von genauer Architektur ab (32-Bit, 64-bit, I oder G Extension). Siehe `Table 18.2` in `RISC-V Calling Convention`.
 
+#figure(
+  table(
+    columns: (auto, auto, 2fr, auto),
+    inset: 8pt,
+    align: horizon,
+    fill: (col, row) => if row == 0 { luma(220) } else { none },
+    
+    [*Register*], [*ABI Name*], [*Beschreibung*], [*Saver*],
+    
+    [x0], [zero], [Hard-wired Zero], [--],
+    [x1], [ra], [Return Address], [Caller],
+    [x2], [sp], [Stack Pointer], [Callee],
+    [x3], [gp], [Global Pointer], [--],
+    [x4], [tp], [Thread Pointer], [--],
+    [x5-x7], [t0-t2], [Temporaries], [Caller],
+    [x8], [s0/fp], [Saved Register / Frame Pointer], [Callee],
+    [x9], [s1], [Saved Register], [Callee],
+    [x10-x11], [a0-a1], [Function Arguments / Return Values], [Caller],
+    [x12-x17], [a2-a7], [Function Arguments], [Caller],
+    [x18-x27], [s2-s11], [Saved Registers], [Callee],
+    [x28-x31], [t3-t6], [Temporaries], [Caller]
+  ),
+  caption: [RISC-V Calling Convention (nach Waterman et al., 2019)]
+)
+
 *Alignment*: 
 
 + Instruction Alignment: Vielfache von 4
