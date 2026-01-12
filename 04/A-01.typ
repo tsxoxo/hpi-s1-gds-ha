@@ -37,7 +37,7 @@ Register werden grob unterschieden:
 *Alignment*: 
 
 + Instruction Alignment: Vielfache von 4
-+ Data Alignment: Keine Vorgabe, aber Konsequenzen, falls nicht naturally aligned (siehe vorherige Hausaufgabe, A-02c)
++ Data Alignment: Keine Vorgabe, aber Konsequenzen, falls nicht naturally aligned (siehe vorherige Hausaufgabe, A-02c). Konsequenz: nautral alignment wird empfohlen.
 
 *Stack*: 
 
