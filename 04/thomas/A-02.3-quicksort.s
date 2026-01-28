@@ -55,8 +55,8 @@ partition:
 # s2 = [i]
 # s3 = [j]
 # s4 = pivot value
-# s5 = start address of array
-# s6 = end address of array
+# s5 = start address of array (copy of a0)
+# s6 = end address of array (copy of a1)
 #####################################################
 # save return address
                 addi sp sp -16
@@ -77,18 +77,21 @@ loop:
                 lw s2 0 s0
                 blt s2 s4 inc_i
                 skip_i:
+                # state: [i] >= pivot
 
                 # scan backward until element <= pivot
                 dec_j:
-                beq s1 s5 skip_j
-                addi s1 s1 -4
+                beq s1 s5 skip_j                                # if j == start goto skip_j
+                addi s1 s1 -4                                   # j--
                 lw s3 0 s1
-                bgt s3 s4 dec_j
+                bgt s3 s4 dec_j                                 # *j > pivot goto dec_j
                 skip_j:
+                # state: [j] <= pivot
 
                 # if i >= j return j
                 bgeu s0 s1 done_partition
 
+                # We know that [i] > [j]
                 # swap(i, j)
                 mv a0 s0
                 mv a1 s1
@@ -114,6 +117,7 @@ quicksort:
 # a0 = start address
 # a1 = end address
 #####################################################
+                # base case
                 # if start address >= end address: return
                 bgeu a0 a1 done_quicksort
 
@@ -128,6 +132,7 @@ quicksort:
 
                 # State after returning from partition():
                 # a0 = address of pivot (return value of partition())
+                # Save this on stack because we are calling quicksort soon
                 sw a0 0 sp
 
                 # Sort high array (values greater than pivot)

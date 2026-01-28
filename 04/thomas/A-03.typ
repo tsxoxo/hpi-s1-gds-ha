@@ -28,23 +28,32 @@ Dementsprechend haben Interrupt-Routinen keinen Rückgabewert. Es gab keinen Auf
 
 Priorisierung und Sperrung von Interrupts könnte vielfältige Anwendung haben:
 
+- *Time-Sharing:* Ermöglicht Multitasking, indem Timer-Interrupts periodisch den Prozess wechseln (Folie 33-34).
 - Interrupts Sperren während der Behandlung eines bestehenden Interrupts um Komplexität (nesting) zu vermeiden.
 - Nach Interrupt-Quellen unterscheiden -- und z.B. zeitkritische Interrupts zuerst behandeln.
-- Kritische Programmabläufe ohne Unterbrechung durchlaufen lassen.
+- Kritische Programmabläufe ohne Unterbrechung, 'atomar', durchlaufen lassen.
 - Bei knappen Ressourcen dafür sorgen, dass laufende Programme weiter laufen.
 
 == 5. Gehen Sie von Interruptbehandlung anhand einer Sprungtabelle aus, von welcher in die richtige Interrupt Service Routine gesprungen wird.
 
 === a) Angenommen, die Sprungtabelle befände sich ohne Schreibschutz im Hauptspeicher. Welches Sicherheitsrisiko ergibt sich daraus? Welche Differenzierung wird nötig?
 
+*Risiko:* Ein Angreifer könnte die Sprungtabelle manipulieren, sodass normaler Code die Kontrolle übernimmt, aber mit erhöhten Rechten läuft (Folie 36).
+
+*Differenzierung (Folie 37):*
+Es ist eine "Zwei-Klassen-Gesellschaft" im Prozessor nötig:
+1. *Normaler Modus (User Mode):* Eingeschränkte Rechte, kein Schreibzugriff auf Interrupt-Tabelle.
+2. *Privilegierter Modus (Supervisor/Kernel Mode):* Darf alles.
+Der Wechsel erfolgt automatisch bei einer Ausnahme (Folie 39).
+
 Das Risiko ist privilege escalation. Ein Angreifer könnte durch Veränderung in
 der Sprungtabelle den Kontrollfluss so umleiten, dass von ihm gesteuerter Code
 als ISR ausgeführt wird. Da die CPU beim Eintritt einer Ausnahme in den
 privilegierten Modus wechselt, hätte dieser Code Zugriff auf systemkritische
-Resourcen.
+Ressourcen.
 
-Es bleibt sicherzustellen, dass die Sprungtabelle nur zu geprüften,
-vertrauenswürdigen Code springt. Es wird also nötig zu differenzieren zwischen
+Es bleibt sicherzustellen, dass die Sprungtabelle nur zu geprüftem,
+vertrauenswürdigem Code springt. Es wird also nötig zu differenzieren zwischen
 systemkritischen (privilegierten) und user-space Operationen. So wird
 verhindert, dass beliebiger Code in geschützte Speicheradressen schreiben darf. 
 
@@ -64,7 +73,7 @@ s. 11.28
 
 Es passieren zwei Dinge: privilege de-escalation und Rückkehr zum normalen
 Programmablauf. Es wird in den Normal-Modus gewechselt, nachdem die ISR im
-privilegierten Modus ausgeführt wurde. Für die Rückkehr zum normalen
+privilegierten Modus ausgeführt wurde (`sret`). Für die Rückkehr zum normalen
 Programmablauf stellt der Prozessor sicher, dass die Laufzeitumgebung
 vollständig auf den Zustand vor dem Eintreten der Ausnahme zurückgesetzt
 ist.--Dies beinhaltet die Widerherstellung des Stacks sowie der Register. Das

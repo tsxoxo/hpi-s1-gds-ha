@@ -2,7 +2,6 @@
 #set page(paper: "a4", margin: (x: 2cm, y: 2cm))
 #set par(justify: true)
 
-// für Code-Blöcke
 #let asm(code) = block(
   fill: luma(240),
   inset: 10pt,
@@ -11,15 +10,12 @@
   text(font: "Cascadia Code", size: 9pt, code)
 )
 
-#align(center, text(17pt)[*Hausaufgabe 4: Aufgabe 2 - Unterprogramme*])
-#v(1cm)
-
-= Aufgabe 2.2: Division und Rest
+== Aufgabe 2.2: Division und Rest
 
 Da wir die Befehle `div`, `rem` und `mul` nicht nutzen dürfen, implementieren wir den Algorithmus der *wiederholten Subtraktion* (Repeated Subtraction). 
 Das ist die einfachste Methode: $a / b$ ist die Anzahl, wie oft man $b$ von $a$ abziehen kann, bis der Rest kleiner als $b$ ist.
 
-== a) Implementierung in Ripes (Call-by-Value)
+=== a) Implementierung in Ripes (Call-by-Value)
 
 Hier werden die Werte direkt in den Registern `a0` und `a1` übergeben.
 
@@ -95,7 +91,7 @@ mod_end:
 
 #pagebreak()
 
-== b) Call-by-Reference
+=== b) Call-by-Reference
 
 Hier enthalten `a0` und `a1` nicht die Werte selbst, sondern die *Adressen* im Speicher, wo die Werte liegen. Wir müssen sie erst laden (`lw`).
 
