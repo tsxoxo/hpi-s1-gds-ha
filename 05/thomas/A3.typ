@@ -53,4 +53,90 @@ Angebrachter koennte es sein, entsprechende Compiler-Flags zu benutzen. Diese wu
 
 *Fazit*: einem C-Programm die Kontrolle ueber cache-policy write allocate vs. write around zu geben, ist einfacher gesagt als getan. 
 Global liesse sich das per Compile-Flags erreichen. Aber um dies per store Anweisung zu kontrollieren, waeren erhebliche Aenderungen
-noetig (z.B. compiler extensions).
+noetig (z.B. compiler extensions, oder intrinsics).
+
+=== 3.3 Strategie-Konfigurationen
+// QUESTION:
+// - with strategy wb, nwa: writeback occurs during load??? what?
+
+Metrik: $ mat("Hit Rate", "Anzahl Writebacks"; "Anzahl Hits", "Anzahl Misses") $
+
+Wir waehlen diese Metrik in Anlehnung an die Moeglichkeiten der Ripes Simulation. Da wir primaer an der Laufzeit interessiert sind, aber Ripes nicht die cache access latency simuliert (siehe #link("https://github.com/mortbopet/Ripes/blob/master/docs/cache_sim.md#cache-simulation")[Dokumentation]), nehmen wir die naechst-besten verfuegbaren Statistiken. 
+
+// Definition `writeback` per Ripes Dokumentation: "# of times a cache line was written back to memory"
+// Auch relevant: Dirty cache lines (when the cache is configured in write-back mode) will still be visible in the memory view. In other words, words are always written through to main memory, even if the cache is configured in write-back mode1.
+
+#table(
+  columns: 5,
+  align: center,
+  [ *Offset*],[ *wb+wa*],[ *wt+wa*],[ *wb+nwa*],[ *wt+nwa* ],
+  [64],[ .78 $med$ 0\ 14 $med$ 4],[ .78 $med$ 8\ 14 $med$ 4],[ .44 $med$ 8\ 8 $med$ 10],[ .44 $med$ 8\ 8 $med$ 10 ],
+  [128],[ .44 $med$ 0\ 8 $med$ 10 ],[ .44 $med$ 8\ 8 $med$ 10 ],[ $=$ ],[ $=$ ]
+)
+
+=== 3.4 offset 128 und write allocate
+
+Bei offset==128 werden das `src` und `dest` auf denselben Index gemapped. Fuer einen Cache mit Assoziativitaetsgrad 1 bedeutet das,
+dass sie auf denselben Index gemapped werden und um dieselbe Line konkurrieren. In der Schleife wird `src` per `load` gecached und dann gleich wieder von `dest` in der
+`store` Instruktion verdraengt. Das wiederholt sich und wir sehen entsprechende Verschlechterung in der Hit-Rate.
+
+Begruendung:
+Wir benutzen die Formel
+
+$
+"index" = ("address" >> "offset_bits") mod "number_of_lines"
+$
+
+Fuer uns ergibt das:
+$
+"index" = ("address" >> 4) mod 2^3
+$
+
+Index wird also bestimmt durch Bits 4, 5, 6 der Adresse.
+
+Untersuchen wir, was genau bei $"address"+64$ bzw. $"address"+128$, passiert sehen wir, 
+dass wegen $64=2^6; 128=2^7$ in dem einen Fall die Relevanten Bits veraendert werden,
+im anderen allerdings nicht. Resultat: die Speicherbloecke werden einmal verschiedenen
+Indizes zugeordnet, und einmal demselben.
+
+Man koennte das Problem umgehen, indem man die Assoziativitaet auf 2 anhebt.--
+Dadurch koennten `src` und `dest` im selben Set gecached werden. Moegliche
+Konfiguration: 4 Sets a 2 Bloecke a 4 Words (Assoziativitaetsgrad 2).
+
+
+// QUESTION:
+// - wieso Unterschied Hits von 6 und nicht 8 == sizeof array?
+
+=== 3.5 Cache-Hits maximieren
+
+Die zuendende Idee ist, loads und stores nicht zu verflechten, sondern zu batchen:
+wir verwenden die ganze geladene Cache Line, erst danach gehen wir zur write-Phase ueber, 
+in der die Line evtl. verdraengt wird. Verdraengung skaliert nun mit `n/size cache line`
+und nicht mehr mit `n`.
+
+Im Falle unseres Arrays, muessten wir einfach den loop ersetzen:
+
+```asm
+    lw t3 0(t0)
+    lw t4 4(t0)
+    sw t3 0(t2)
+    sw t3 4(t2)
+```
+und kommen damit auf eine Hit-Rate von 67%.
+
+Fuer eine skalierte Version bietet sich eine Schleife an, die mit ganzen Cache-Lines arbeitet:
+
+```pseudo
+// N = array length in words
+// step of 4 -> our cache block size is 4 words
+for i in 0..N-1 step 4:
+    w0 = load word src[i+0]
+    w1 = load word src[i+1]
+    w2 = load word src[i+2]
+    w3 = load word src[i+3]
+
+    store word dest[i+0] = w0
+    store word dest[i+1] = w1
+    store word dest[i+2] = w2
+    store word dest[i+3] = w3
+```
