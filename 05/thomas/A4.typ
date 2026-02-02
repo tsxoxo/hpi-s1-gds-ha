@@ -52,4 +52,8 @@ The model allows an older write to overwrite a newer one at the same core. Thus,
 we define 'sufficient time' as a full propagation cycle. then this requirement could be fulfilled. 
 
 ==== Write serialization
-. possibly, my previous thoughts have been invalidated now, i am not sure. another question: if there's two propagations happening at the same time, do they both happen at the same rate? can we assume they do? is this mundane to this problem? the way i see it: we have to assume that propagations happen and finish in order, otherwise this all turns to mush. i dont see the problem in your scenario immediately, but i see this: - t: core 0 sets x=0 - t+1: core 2 sets x=1 - t+2: core 2 reads x=1 - t+3: x=0 propagates to core 2 - t+4: core 2 reads x=0 so this is violated as well.
+- `t`: core 0 sets `x=0` 
+- `t+1`: core 2 sets `x=1` 
+- `t+2`: core 2 reads `x=1` 
+- `t+3`: `x=0` propagates to core 2 
+- `t+4`: core 2 reads `x=0` so this is violated as well

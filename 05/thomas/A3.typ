@@ -16,12 +16,12 @@ Moegliche Konfigurationen:
 === 3.2 write allocate vs. write around
 write around bedeutet, dass bei einem write-miss das Datum nicht ins Cache geschrieben wird. Die Strategie wird oft mit der write-through Strategie gepaart.
 
-Beispiele fuer Situationen in denen _write around_ sinnvoll ist sind generell Faelle, in denen zeitliche und raeumliche Lokalitaet nicht zutreffen: wenn wir nicht erwarten,
-dass unsere writes bald gelesen werden, waere die doppelte Schreibarbeit unter _write allocate_ vergeudet und unser Cache mit nicht mehr gebrauchten Daten befuellt (Fachbegriff `cache pollution`). Konkreter: einmalige, verstreute schreib-Operationen auf eine Menge von Variablen, structs, oder sogar einen einzigen grossen Array.
+Beispiele fuer Situationen in denen _write around_ sinnvoll ist sind generell Faelle, in denen zeitliche und raeumliche Lokalitaet nicht zutreffen: wenn wir nicht erwarten, dass unsere writes bald gelesen werden, waere die doppelte Schreibarbeit unter _write allocate_ vergeudet und unser Cache mit nicht mehr gebrauchten Daten befuellt (Fachbegriff `cache pollution`). Konkreter: einmalige, verstreute schreib-Operationen auf eine Menge von Variablen, structs, oder sogar einen einzigen grossen Array.
 
 Um Programmiern die Wahl zwischen den beiden Strategien zu ueberlassen, koennte man die _store_ Instruktion in _store with write around_ und _store with write allocate_ verzweigen:
 
 ```asm
+# Syntax ist analog zu bestehenden RISC-V `store` Instruktionen
 salw t0 0 t1 # (s)tore (w)ord using write (al)locate
 sarw t0 0 t1 # (s)tore (w)ord using write (ar)ound
 ```
@@ -54,6 +54,8 @@ Angebrachter koennte es sein, entsprechende Compiler-Flags zu benutzen. Diese wu
 *Fazit*: einem C-Programm die Kontrolle ueber cache-policy write allocate vs. write around zu geben, ist einfacher gesagt als getan. 
 Global liesse sich das per Compile-Flags erreichen. Aber um dies per store Anweisung zu kontrollieren, waeren erhebliche Aenderungen
 noetig (z.B. compiler extensions, oder intrinsics).
+// TODO: intrinsics?
+// ANSWER: inline functions exposing system internals (cpu specifically?)
 
 === 3.3 Strategie-Konfigurationen
 // QUESTION:
